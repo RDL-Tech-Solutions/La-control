@@ -91,8 +91,8 @@ export default function ServicosPage() {
                 <button
                     onClick={() => setActiveTab('services')}
                     className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'services'
-                            ? 'border-[var(--color-primary-500)] text-[var(--color-primary-400)]'
-                            : 'border-transparent text-[var(--color-neutral-400)] hover:text-[var(--color-neutral-200)]'
+                        ? 'border-[var(--color-primary-500)] text-[var(--color-primary-400)]'
+                        : 'border-transparent text-[var(--color-neutral-400)] hover:text-[var(--color-neutral-200)]'
                         }`}
                 >
                     <span className="flex items-center gap-2">
@@ -103,8 +103,8 @@ export default function ServicosPage() {
                 <button
                     onClick={() => setActiveTab('types')}
                     className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'types'
-                            ? 'border-[var(--color-primary-500)] text-[var(--color-primary-400)]'
-                            : 'border-transparent text-[var(--color-neutral-400)] hover:text-[var(--color-neutral-200)]'
+                        ? 'border-[var(--color-primary-500)] text-[var(--color-primary-400)]'
+                        : 'border-transparent text-[var(--color-neutral-400)] hover:text-[var(--color-neutral-200)]'
                         }`}
                 >
                     <span className="flex items-center gap-2">
@@ -243,7 +243,7 @@ export default function ServicosPage() {
                                                         className="flex items-center justify-between text-sm"
                                                     >
                                                         <span className="text-[var(--color-neutral-300)]">
-                                                            {sp.product?.name}
+                                                            {sp.product?.code ? `[${sp.product.code}] ` : ''}{sp.product?.name}
                                                         </span>
                                                         <span className="text-[var(--color-neutral-500)]">
                                                             {sp.default_quantity} un

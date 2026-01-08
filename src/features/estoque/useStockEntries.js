@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
+import { useProducts } from './useProducts'
 
 // Shared state for all instances of useStockEntries
 let globalEntries = []
@@ -19,6 +20,8 @@ const notifyListeners = () => {
 }
 
 export function useStockEntries() {
+    const { fetchProducts } = useProducts()
+
     const [state, setState] = useState({
         entries: globalEntries,
         loading: globalLoading,
@@ -138,6 +141,10 @@ export function useStockEntries() {
 
             globalEntries = [entryData, ...globalEntries]
             notifyListeners()
+
+            // Força a atualização da lista de produtos para refletir o novo saldo
+            await fetchProducts()
+
             toast.success('Entrada registrada com sucesso!')
             return entryData
         } catch (err) {

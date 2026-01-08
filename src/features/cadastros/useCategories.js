@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
-// Shared state for all instances of useUnits
-let globalUnits = []
+// Shared state for all instances of useCategories
+let globalCategories = []
 let globalLoading = true
 let globalError = null
 let listeners = []
@@ -11,38 +11,38 @@ let listeners = []
 const notifyListeners = () => {
     listeners.forEach(listener => {
         listener({
-            units: [...globalUnits],
+            categories: [...globalCategories],
             loading: globalLoading,
             error: globalError
         })
     })
 }
 
-export function useUnits() {
+export function useCategories() {
     const [state, setState] = useState({
-        units: globalUnits,
+        categories: globalCategories,
         loading: globalLoading,
         error: globalError
     })
 
-    const fetchUnits = useCallback(async () => {
+    const fetchCategories = useCallback(async () => {
         try {
             globalLoading = true
             notifyListeners()
 
             const { data, error } = await supabase
-                .from('units')
+                .from('categories')
                 .select('*')
                 .order('name')
 
             if (error) throw error
 
-            globalUnits = data || []
+            globalCategories = data || []
             globalError = null
         } catch (err) {
-            console.error('Error fetching units:', err)
+            console.error('Error fetching categories:', err)
             globalError = err.message
-            toast.error('Erro ao carregar unidades')
+            toast.error('Erro ao carregar categorias')
         } finally {
             globalLoading = false
             notifyListeners()
@@ -54,40 +54,40 @@ export function useUnits() {
         listeners.push(listener)
 
         // If it's the first time or we have no data, fetch
-        if (globalUnits.length === 0 && globalLoading) {
-            fetchUnits()
+        if (globalCategories.length === 0 && globalLoading) {
+            fetchCategories()
         }
 
         return () => {
             listeners = listeners.filter(l => l !== listener)
         }
-    }, [fetchUnits])
+    }, [fetchCategories])
 
-    const createUnit = async (unit) => {
+    const createCategory = async (category) => {
         try {
             const { data, error } = await supabase
-                .from('units')
-                .insert([unit])
+                .from('categories')
+                .insert([category])
                 .select()
                 .single()
 
             if (error) throw error
 
-            globalUnits = [...globalUnits, data].sort((a, b) => a.name.localeCompare(b.name))
+            globalCategories = [...globalCategories, data].sort((a, b) => a.name.localeCompare(b.name))
             notifyListeners()
-            toast.success('Unidade criada com sucesso!')
+            toast.success('Categoria criada com sucesso!')
             return data
         } catch (err) {
-            console.error('Error creating unit:', err)
-            toast.error('Erro ao criar unidade')
+            console.error('Error creating category:', err)
+            toast.error('Erro ao criar categoria')
             throw err
         }
     }
 
-    const updateUnit = async (id, updates) => {
+    const updateCategory = async (id, updates) => {
         try {
             const { data, error } = await supabase
-                .from('units')
+                .from('categories')
                 .update(updates)
                 .eq('id', id)
                 .select()
@@ -95,32 +95,32 @@ export function useUnits() {
 
             if (error) throw error
 
-            globalUnits = globalUnits.map(u => u.id === id ? data : u).sort((a, b) => a.name.localeCompare(b.name))
+            globalCategories = globalCategories.map(c => c.id === id ? data : c).sort((a, b) => a.name.localeCompare(b.name))
             notifyListeners()
-            toast.success('Unidade atualizada com sucesso!')
+            toast.success('Categoria atualizada com sucesso!')
             return data
         } catch (err) {
-            console.error('Error updating unit:', err)
-            toast.error('Erro ao atualizar unidade')
+            console.error('Error updating category:', err)
+            toast.error('Erro ao atualizar categoria')
             throw err
         }
     }
 
-    const deleteUnit = async (id) => {
+    const deleteCategory = async (id) => {
         try {
             const { error } = await supabase
-                .from('units')
+                .from('categories')
                 .delete()
                 .eq('id', id)
 
             if (error) throw error
 
-            globalUnits = globalUnits.filter(u => u.id !== id)
+            globalCategories = globalCategories.filter(c => c.id !== id)
             notifyListeners()
-            toast.success('Unidade excluída com sucesso!')
+            toast.success('Categoria excluída com sucesso!')
         } catch (err) {
-            console.error('Error deleting unit:', err)
-            toast.error('Erro ao excluir unidade')
+            console.error('Error deleting category:', err)
+            toast.error('Erro ao excluir categoria')
             throw err
         }
     }
@@ -131,33 +131,33 @@ export function useUnits() {
             notifyListeners()
 
             const defaults = [
-                { name: 'Unidade', abbreviation: 'un', default_value: 1.0 },
-                { name: 'Mililitro', abbreviation: 'ml', default_value: 1.0 },
-                { name: 'Litro', abbreviation: 'l', default_value: 1.0 },
-                { name: 'Grama', abbreviation: 'g', default_value: 1.0 },
-                { name: 'Quilograma', abbreviation: 'kg', default_value: 1.0 },
-                { name: 'Par', abbreviation: 'par', default_value: 1.0 },
-                { name: 'Caixa', abbreviation: 'cx', default_value: 1.0 },
-                { name: 'Pacote', abbreviation: 'pct', default_value: 1.0 }
+                { name: 'Equipamento', prefix: 'EQ' },
+                { name: 'Ferramenta', prefix: 'FR' },
+                { name: 'Lixa', prefix: 'LX' },
+                { name: 'Higiene', prefix: 'HP' },
+                { name: 'Tips', prefix: 'TP' },
+                { name: 'Gel', prefix: 'GL' },
+                { name: 'Esmalte', prefix: 'ES' },
+                { name: 'Finalizado', prefix: 'FN' },
+                { name: 'Preparador', prefix: 'PQ' }
             ]
 
-            // Get current user
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Usuário não autenticado')
 
-            const unitsWithUserId = defaults.map(u => ({ ...u, user_id: user.id }))
+            const categoriesWithUserId = defaults.map(c => ({ ...c, user_id: user.id }))
 
             const { data, error } = await supabase
-                .from('units')
-                .upsert(unitsWithUserId, { onConflict: 'user_id, abbreviation' })
+                .from('categories')
+                .upsert(categoriesWithUserId, { onConflict: 'user_id, name' })
                 .select()
 
             if (error) throw error
 
-            await fetchUnits()
+            await fetchCategories()
             toast.success('Modelos padrões carregados!')
         } catch (err) {
-            console.error('Error resetting units:', err)
+            console.error('Error resetting categories:', err)
             toast.error('Erro ao carregar padrões')
         } finally {
             globalLoading = false
@@ -166,13 +166,13 @@ export function useUnits() {
     }
 
     return {
-        units: state.units,
+        categories: state.categories,
         loading: state.loading,
         error: state.error,
-        fetchUnits,
-        createUnit,
-        updateUnit,
-        deleteUnit,
+        fetchCategories,
+        createCategory,
+        updateCategory,
+        deleteCategory,
         resetToDefaults,
     }
 }

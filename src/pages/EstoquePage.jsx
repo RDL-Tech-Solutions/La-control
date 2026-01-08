@@ -126,17 +126,32 @@ export default function EstoquePage() {
                                     <div>
                                         <h3 className="item-card-title">{product.name}</h3>
                                         {product.brand && (
-                                            <p className="text-xs text-[var(--color-primary-400)] font-medium mb-0.5">
-                                                {product.brand.name}
+                                            <p className="text-xs text-[var(--color-primary-400)] font-medium mb-0.5 flex flex-wrap gap-2 items-center">
+                                                <span>{product.brand.name}</span>
+                                                {product.categories && (
+                                                    <span className="text-[var(--color-neutral-500)]">• {product.categories.name}</span>
+                                                )}
+                                            </p>
+                                        )}
+                                        {!product.brand && product.categories && (
+                                            <p className="text-xs text-[var(--color-neutral-500)] font-medium mb-0.5">
+                                                {product.categories.name}
                                             </p>
                                         )}
                                         {product.description && (
                                             <p className="item-card-subtitle">{product.description}</p>
                                         )}
                                     </div>
-                                    <span className={`stock-indicator ${status}`}>
-                                        {getStockLabel(status)}
-                                    </span>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <span className={`stock-indicator ${status}`}>
+                                            {getStockLabel(status)}
+                                        </span>
+                                        {product.code && (
+                                            <span className="text-[10px] uppercase font-mono bg-[var(--color-neutral-800)] text-[var(--color-neutral-400)] px-1.5 py-0.5 rounded border border-[var(--color-neutral-700)]">
+                                                {product.code}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="item-card-body">

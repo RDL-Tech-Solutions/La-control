@@ -30,6 +30,7 @@ export default function ServiceTypeModal({ isOpen, onClose, serviceType, product
                 serviceType.service_products?.map(sp => ({
                     product_id: sp.product_id,
                     default_quantity: sp.default_quantity,
+                    use_unit_system: sp.use_unit_system || false,
                 })) || []
             )
         } else {
@@ -58,7 +59,7 @@ export default function ServiceTypeModal({ isOpen, onClose, serviceType, product
         if (availableProducts.length === 0) return
         setSelectedProducts(prev => [
             ...prev,
-            { product_id: '', default_quantity: 1 }
+            { product_id: '', default_quantity: 1, use_unit_system: false }
         ])
     }
 
@@ -207,42 +208,74 @@ export default function ServiceTypeModal({ isOpen, onClose, serviceType, product
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {selectedProducts.map((sp, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center gap-3 p-3 rounded-lg bg-[var(--color-neutral-800)]"
-                                >
-                                    <div className="flex-1">
-                                        <Select
-                                            options={[
-                                                ...products
-                                                    .filter(p => p.id === sp.product_id || !selectedProducts.find(s => s.product_id === p.id))
-                                                    .map(p => ({ value: p.id, label: p.name }))
-                                            ]}
-                                            value={sp.product_id}
-                                            onChange={(e) => updateSelectedProduct(index, 'product_id', e.target.value)}
-                                            placeholder="Selecione um produto"
-                                        />
-                                    </div>
-                                    <div className="w-24">
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            value={sp.default_quantity}
-                                            onChange={(e) => updateSelectedProduct(index, 'default_quantity', e.target.value)}
-                                            placeholder="Qtd"
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeProduct(index)}
-                                        className="p-2 rounded-lg hover:bg-[var(--color-neutral-700)] text-[var(--color-neutral-400)] hover:text-[var(--color-error-400)] transition-colors"
+                            {selectedProducts.map((sp, index) => {
+                                const productDetail = products.find(p => p.id === sp.product_id)
+                                const quantityLabel = sp.use_unit_system ? 'un' : (productDetail?.unit || 'qtd')
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className="p-3 rounded-lg bg-[var(--color-neutral-800)] border border-[var(--color-neutral-700)]"
                                     >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))}
+                                        <div className="flex items-start gap-3 mb-3">
+                                            <div className="flex-1">
+                                                <Select
+                                                    options={[
+                                                        ...products
+                                                            .filter(p => p.id === sp.product_id || !selectedProducts.find(s => s.product_id === p.id))
+                                                            .map(p => ({ value: p.id, label: p.code ? `[${p.code}] ${p.name}` : p.name }))
+                                                    ]}
+                                                    value={sp.product_id}
+                                                    onChange={(e) => updateSelectedProduct(index, 'product_id', e.target.value)}
+                                                    placeholder="Selecione um produto"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeProduct(index)}
+                                                className="p-2 rounded-lg hover:bg-[var(--color-neutral-700)] text-[var(--color-neutral-400)] hover:text-[var(--color-error-400)] transition-colors"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-4">
+                                            <div className="w-24">
+                                                <Input
+                                                    type="number"
+                                                    min="0.01"
+                                                    step="0.01"
+                                                    value={sp.default_quantity}
+                                                    onChange={(e) => updateSelectedProduct(index, 'default_quantity', e.target.value)}
+                                                    placeholder="Qtd"
+                                                    label={`Qtd (${quantityLabel})`}
+                                                />
+                                            </div>
+
+                                            <label className="flex items-center gap-2 cursor-pointer mt-5">
+                                                <div className="relative inline-flex items-center cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="sr-only peer"
+                                                        checked={sp.use_unit_system}
+                                                        onChange={(e) => updateSelectedProduct(index, 'use_unit_system', e.target.checked)}
+                                                    />
+                                                    <div className="w-9 h-5 bg-[var(--color-neutral-700)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--color-primary-500)]"></div>
+                                                </div>
+                                                <span className="text-sm text-[var(--color-neutral-300)]">
+                                                    Usar Unidade (frasco/cx)
+                                                </span>
+                                            </label>
+
+                                            {sp.use_unit_system && productDetail && (
+                                                <span className="text-xs text-[var(--color-neutral-500)] mt-5">
+                                                    Total: {sp.default_quantity * productDetail.conversion_factor} {productDetail.unit}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
                     )}
                 </div>

@@ -41,10 +41,14 @@ export default function DashboardPage() {
     }
 
     const lowStockProducts = getLowStockProducts()
+
     const todayServices = services.filter(s => {
-        const serviceDate = new Date(s.date).toDateString()
-        const today = new Date().toDateString()
-        return serviceDate === today
+        // Obter data de hoje no formato YYYY-MM-DD local
+        const today = new Date()
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+        // Comparar com a data do serviço (que vem como YYYY-MM-DD do banco)
+        return s.date === todayStr
     })
 
     return (
@@ -119,12 +123,12 @@ export default function DashboardPage() {
                                         <div>
                                             <p className="font-medium text-[var(--color-neutral-100)]">{product.name}</p>
                                             <p className="text-xs text-[var(--color-neutral-400)]">
-                                                Mínimo: {product.min_quantity}
+                                                Mínimo: {product.min_quantity / (product.conversion_factor || 1)} un
                                             </p>
                                         </div>
                                     </div>
                                     <div className={`stock-indicator ${product.current_quantity === 0 ? 'out' : 'low'}`}>
-                                        {product.current_quantity} un
+                                        {product.current_quantity / (product.conversion_factor || 1)} un
                                     </div>
                                 </div>
                             ))}

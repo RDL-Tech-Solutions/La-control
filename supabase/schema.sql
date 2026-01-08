@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS public.units (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     name VARCHAR(50) NOT NULL, -- Ex: Mililitro
     abbreviation VARCHAR(10) NOT NULL, -- Ex: ml
+    default_value DECIMAL(10,2) DEFAULT 1 NOT NULL, -- Ex: 5ml
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
 );
@@ -138,6 +139,35 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_products_updated_at
     BEFORE UPDATE ON public.products
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+-- =============================================
+-- AUTO-POPULATE DEFAULT UNITS FOR NEW USERS
+-- =============================================
+CREATE OR REPLACE FUNCTION public.handle_new_user_units()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.units (user_id, name, abbreviation, default_value)
+    VALUES 
+        (NEW.id, 'Unidade', 'un', 1),
+        (NEW.id, 'Mililitro', 'ml', 5),
+        (NEW.id, 'Litro', 'l', 1),
+        (NEW.id, 'Grama', 'g', 1),
+        (NEW.id, 'Quilograma', 'kg', 1),
+        (NEW.id, 'Par', 'par', 1),
+        (NEW.id, 'Caixa', 'cx', 1),
+        (NEW.id, 'Pacote', 'pct', 1);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger on auth.users (requires manual setup in Supabase or using a wrapper)
+-- Since we can't easily add triggers to auth.users schema via just SQL editor in some cases,
+-- we'll provide the command but note it might need to be run as superuser.
+-- In Supabase, this is usually done via:
+-- CREATE TRIGGER on_auth_user_created_units
+--     AFTER INSERT ON auth.users
+--     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_units();
+
 
 -- =============================================
 -- 2. STOCK ENTRIES TABLE

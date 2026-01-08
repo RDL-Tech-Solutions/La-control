@@ -37,7 +37,7 @@ export default function StockEntryModal({ isOpen, onClose, products }) {
 
     const productOptions = products.map(p => ({
         value: p.id,
-        label: p.name,
+        label: p.code ? `[${p.code}] ${p.name}` : p.name,
     }))
 
     const selectedProduct = products.find(p => p.id === formData.product_id)

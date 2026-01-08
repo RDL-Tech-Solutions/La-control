@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
     LayoutDashboard,
@@ -7,7 +8,9 @@ import {
     FileText,
     LogOut,
     Sparkles,
-    Settings
+    Settings,
+    Menu,
+    X
 } from 'lucide-react'
 import { useAuth } from '../features/auth/AuthContext'
 
@@ -23,6 +26,12 @@ const navItems = [
 export default function Layout({ children }) {
     const location = useLocation()
     const { user, signOut } = useAuth()
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+    // Close sidebar when route changes
+    useEffect(() => {
+        setIsSidebarOpen(false)
+    }, [location])
 
     const handleSignOut = async () => {
         try {
@@ -33,14 +42,44 @@ export default function Layout({ children }) {
     }
 
     return (
-        <>
-            {/* Sidebar - Desktop */}
-            <aside className="sidebar">
-                <div className="sidebar-logo">
-                    <div className="sidebar-logo-icon">
-                        <Sparkles className="w-5 h-5" />
+        <div className="layout-root">
+            {/* Mobile Header (Visible only on small screens) */}
+            <header className="mobile-header">
+                <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="mobile-header-btn"
+                >
+                    <Menu className="w-6 h-6" />
+                </button>
+                <div className="mobile-header-logo">
+                    <Sparkles className="w-5 h-5 text-[var(--color-primary-400)]" />
+                    <span>LA Control</span>
+                </div>
+            </header>
+
+            {/* Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="sidebar-overlay"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+                <div className="sidebar-header">
+                    <div className="sidebar-logo">
+                        <div className="sidebar-logo-icon">
+                            <Sparkles className="w-5 h-5" />
+                        </div>
+                        <span className="sidebar-logo-text">LA Control</span>
                     </div>
-                    <span className="sidebar-logo-text">LA Control</span>
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="sidebar-close-btn"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
 
                 <nav className="sidebar-nav">
@@ -78,7 +117,7 @@ export default function Layout({ children }) {
                 {children}
             </main>
 
-            {/* Tab Bar - Mobile */}
+            {/* Tab Bar - Mobile (Hidden on very small screens) */}
             <nav className="tab-bar safe-area-bottom">
                 {navItems.map((item) => (
                     <NavLink
@@ -95,6 +134,6 @@ export default function Layout({ children }) {
                     </NavLink>
                 ))}
             </nav>
-        </>
+        </div>
     )
 }

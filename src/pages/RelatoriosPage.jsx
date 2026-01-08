@@ -66,14 +66,17 @@ export default function RelatoriosPage() {
             switch (selectedReport) {
                 case 'estoque':
                     title = 'Relatório de Estoque'
-                    columns = ['Produto', 'Qtd Atual', 'Qtd Base', 'Custo Unit.', 'Valor Total']
+                    columns = ['Código', 'Produto', 'Categoria', 'Saldo', 'Mínimo', 'Alerta', 'Custo Unit.', 'Valor Total']
                     data = products.map(p => {
                         const totalValue = (p.current_quantity || 0) * (p.last_unit_cost || 0)
-                        const baseQuantity = (p.current_quantity || 0) / (p.conversion_factor || 1)
+                        const isLow = p.current_quantity <= (p.min_quantity || 0)
                         return [
+                            p.code || '-',
                             p.name,
-                            `${baseQuantity.toFixed(2)} un`,
+                            p.categories?.name || '-',
                             `${p.current_quantity} ${p.unit || 'un'}`,
+                            `${p.min_quantity} ${p.unit || 'un'}`,
+                            isLow ? 'ESTOQUE BAIXO' : 'OK',
                             formatCurrency(p.last_unit_cost || 0),
                             formatCurrency(totalValue)
                         ]
@@ -135,16 +138,19 @@ export default function RelatoriosPage() {
             switch (selectedReport) {
                 case 'estoque':
                     filename = 'estoque'
-                    headers = ['Nome', 'Descrição', 'Qtd (unidades)', 'Qtd Base', 'Unidade', 'Custo Unit.', 'Valor Total']
+                    headers = ['Código', 'Nome', 'Categoria', 'Descrição', 'Saldo', 'Mínimo', 'Unidade', 'Status', 'Custo Unit.', 'Valor Total']
                     data = products.map(p => {
                         const totalValue = (p.current_quantity || 0) * (p.last_unit_cost || 0)
-                        const baseQuantity = (p.current_quantity || 0) / (p.conversion_factor || 1)
+                        const isLow = p.current_quantity <= (p.min_quantity || 0)
                         return {
+                            'Código': p.code || '-',
                             'Nome': p.name,
+                            'Categoria': p.categories?.name || '-',
                             'Descrição': p.description || '',
-                            'Qtd (unidades)': baseQuantity,
-                            'Qtd Base': p.current_quantity,
+                            'Saldo': p.current_quantity,
+                            'Mínimo': p.min_quantity || 0,
                             'Unidade': p.unit || 'un',
+                            'Status': isLow ? 'ESTOQUE BAIXO' : 'OK',
                             'Custo Unit.': p.last_unit_cost || 0,
                             'Valor Total': totalValue,
                         }
@@ -351,9 +357,11 @@ export default function RelatoriosPage() {
                         <thead>
                             {selectedReport === 'estoque' && (
                                 <tr>
+                                    <th>Código</th>
                                     <th>Produto</th>
-                                    <th>Qtd Atual</th>
-                                    <th>Custo Unit.</th>
+                                    <th>Saldo</th>
+                                    <th>Mínimo</th>
+                                    <th>Status</th>
                                     <th>Valor Total</th>
                                 </tr>
                             )}
@@ -375,14 +383,27 @@ export default function RelatoriosPage() {
                             )}
                         </thead>
                         <tbody>
-                            {selectedReport === 'estoque' && products.slice(0, 5).map((p) => (
-                                <tr key={p.id}>
-                                    <td>{p.name}</td>
-                                    <td>{p.current_quantity} {p.unit || 'un'}</td>
-                                    <td>{formatCurrency(p.last_unit_cost || 0)}</td>
-                                    <td>{formatCurrency((p.current_quantity || 0) * (p.last_unit_cost || 0))}</td>
-                                </tr>
-                            ))}
+                            {selectedReport === 'estoque' && products.slice(0, 5).map((p) => {
+                                const isLow = p.current_quantity <= (p.min_quantity || 0)
+                                return (
+                                    <tr key={p.id}>
+                                        <td>
+                                            {p.code ? (
+                                                <span className="font-mono text-xs">{p.code}</span>
+                                            ) : '-'}
+                                        </td>
+                                        <td>{p.name}</td>
+                                        <td>{p.current_quantity} {p.unit || 'un'}</td>
+                                        <td>{p.min_quantity} {p.unit || 'un'}</td>
+                                        <td>
+                                            <span className={`badge ${isLow ? 'badge-error' : 'badge-success'} text-[10px]`}>
+                                                {isLow ? 'ESTOQUE BAIXO' : 'OK'}
+                                            </span>
+                                        </td>
+                                        <td>{formatCurrency((p.current_quantity || 0) * (p.last_unit_cost || 0))}</td>
+                                    </tr>
+                                )
+                            })}
                             {selectedReport === 'servicos' && services.slice(0, 5).map((s) => (
                                 <tr key={s.id}>
                                     <td>{s.client_name}</td>

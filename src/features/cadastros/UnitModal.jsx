@@ -7,14 +7,18 @@ import { useUnits } from './useUnits'
 export default function UnitModal({ isOpen, onClose, unit }) {
     const { createUnit, updateUnit } = useUnits()
     const [loading, setLoading] = useState(false)
-    const [formData, setFormData] = useState({ name: '', abbreviation: '' })
+    const [formData, setFormData] = useState({ name: '', abbreviation: '', default_value: 1 })
     const [errors, setErrors] = useState({})
 
     useEffect(() => {
         if (unit) {
-            setFormData({ name: unit.name, abbreviation: unit.abbreviation })
+            setFormData({
+                name: unit.name,
+                abbreviation: unit.abbreviation,
+                default_value: unit.default_value || 1
+            })
         } else {
-            setFormData({ name: '', abbreviation: '' })
+            setFormData({ name: '', abbreviation: '', default_value: 1 })
         }
         setErrors({})
     }, [unit, isOpen])
@@ -89,6 +93,22 @@ export default function UnitModal({ isOpen, onClose, unit }) {
                     placeholder="Ex: ml"
                     required
                 />
+                <Input
+                    label="Conversão (1 un = ?)"
+                    name="default_value"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.default_value}
+                    onChange={handleChange}
+                    error={errors.default_value}
+                    placeholder="Ex: 5"
+                    required
+                />
+                <p className="text-[10px] text-[var(--color-neutral-500)] mt-[-8px]">
+                    Ex: Se você compra em frascos e cada um tem 5ml, coloque 5.
+                    Ao registrar a entrada de 2 frascos, o sistema somará 10ml no estoque.
+                </p>
             </form>
         </Modal>
     )

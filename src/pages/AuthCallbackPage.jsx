@@ -10,19 +10,32 @@ export default function AuthCallbackPage() {
     useEffect(() => {
         const handleAuthCallback = async () => {
             try {
-                // Supabase detectSessionInUrl: true already handles the hash
-                // but we wait a bit for the session to be established
                 const { data: { session }, error } = await supabase.auth.getSession()
 
-                if (error) throw error
+                if (error) {
+                    if (error.message.includes('Refresh Token Not Found') ||
+                        error.message.includes('Invalid Refresh Token')) {
+                        await supabase.auth.signOut()
+                    }
+                    throw error
+                }
 
                 if (session) {
                     toast.success('Email confirmado com sucesso!')
                     navigate('/', { replace: true })
                 } else {
+                    // Check if there's a session in the callback
+                    const { data: { session: currentSession } } = await supabase.auth.getSession()
+                    if (currentSession) {
+                        toast.success('Email confirmado com sucesso!')
+                        navigate('/', { replace: true })
+                        return
+                    }
+
                     // If no session, wait for onAuthStateChange or redirect to login
                     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                        if (event === 'SIGNED_IN' && session) {
+                        console.log('AuthCallback event:', event)
+                        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
                             toast.success('Email confirmado com sucesso!')
                             subscription.unsubscribe()
                             navigate('/', { replace: true })
@@ -30,10 +43,15 @@ export default function AuthCallbackPage() {
                     })
 
                     // Fallback after 5 seconds
-                    setTimeout(() => {
+                    const timeout = setTimeout(() => {
                         subscription.unsubscribe()
                         navigate('/login', { replace: true })
                     }, 5000)
+
+                    return () => {
+                        clearTimeout(timeout)
+                        subscription.unsubscribe()
+                    }
                 }
             } catch (error) {
                 console.error('Error during auth callback:', error)

@@ -4,7 +4,7 @@ import Input from '../../components/Input'
 import Button from '../../components/Button'
 import { useBrands } from './useBrands'
 
-export default function BrandModal({ isOpen, onClose, brand }) {
+export default function BrandModal({ isOpen, onClose, brand, onSuccess }) {
     const { createBrand, updateBrand } = useBrands()
     const [loading, setLoading] = useState(false)
     const [name, setName] = useState('')
@@ -29,9 +29,11 @@ export default function BrandModal({ isOpen, onClose, brand }) {
         setLoading(true)
         try {
             if (brand) {
-                await updateBrand(brand.id, { name })
+                const updatedBrand = await updateBrand(brand.id, { name })
+                if (onSuccess) onSuccess(updatedBrand)
             } else {
-                await createBrand({ name })
+                const newBrand = await createBrand({ name })
+                if (onSuccess) onSuccess(newBrand)
             }
             onClose()
         } catch (err) {

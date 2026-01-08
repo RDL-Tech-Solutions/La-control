@@ -89,25 +89,33 @@ export function useServices() {
                 .select(`
           product_id,
           default_quantity,
-          product:products(id, name, current_quantity, last_unit_cost)
+          use_unit_system,
+          product:products(id, name, current_quantity, conversion_factor, last_unit_cost, unit)
         `)
                 .eq('service_type_id', serviceTypeId)
 
             if (error) throw error
 
             // Check if all products have sufficient stock
-            const insufficientStock = serviceProducts.filter(
-                sp => sp.product.current_quantity < sp.default_quantity
+            const productsWithDeduction = serviceProducts.map(sp => {
+                const deducedQuantity = sp.use_unit_system
+                    ? sp.default_quantity * (sp.product.conversion_factor || 1)
+                    : sp.default_quantity
+                return { ...sp, deducedQuantity }
+            })
+
+            const insufficientStock = productsWithDeduction.filter(
+                sp => sp.product.current_quantity < sp.deducedQuantity
             )
 
             return {
                 available: insufficientStock.length === 0,
                 insufficientProducts: insufficientStock.map(sp => ({
                     name: sp.product.name,
-                    required: sp.default_quantity,
+                    required: sp.deducedQuantity,
                     available: sp.product.current_quantity,
                 })),
-                products: serviceProducts,
+                products: productsWithDeduction,
             }
         } catch (err) {
             console.error('Error checking stock:', err)
@@ -139,7 +147,8 @@ export function useServices() {
             // 3. Calculate total product cost
             const productCost = stockCheck.products.reduce((sum, sp) => {
                 const unitCost = sp.product.last_unit_cost || 0
-                return sum + (sp.default_quantity * unitCost)
+                // Use deducedQuantity which is already in base measure
+                return sum + (sp.deducedQuantity * unitCost)
             }, 0)
 
             // 4. Create the service
@@ -163,7 +172,7 @@ export function useServices() {
 
             // 5. Deduct stock for each product
             for (const sp of stockCheck.products) {
-                const newQuantity = sp.product.current_quantity - sp.default_quantity
+                const newQuantity = sp.product.current_quantity - sp.deducedQuantity
 
                 const { error: updateError } = await supabase
                     .from('products')
@@ -206,7 +215,8 @@ export function useServices() {
                 .select(`
           product_id,
           default_quantity,
-          product:products(current_quantity)
+          use_unit_system,
+          product:products(current_quantity, conversion_factor)
         `)
                 .eq('service_type_id', service.service_type_id)
 
@@ -214,7 +224,11 @@ export function useServices() {
 
             // 2. Restore stock
             for (const sp of serviceProducts) {
-                const newQuantity = sp.product.current_quantity + sp.default_quantity
+                const restoredQuantity = sp.use_unit_system
+                    ? sp.default_quantity * (sp.product.conversion_factor || 1)
+                    : sp.default_quantity
+
+                const newQuantity = sp.product.current_quantity + restoredQuantity
 
                 const { error: updateError } = await supabase
                     .from('products')

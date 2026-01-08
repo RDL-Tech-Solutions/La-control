@@ -38,7 +38,8 @@ export function useServiceTypes() {
             id,
             product_id,
             default_quantity,
-            product:products(id, name, current_quantity)
+            use_unit_system,
+            product:products(id, name, current_quantity, conversion_factor, unit)
           )
         `)
                 .order('name')
@@ -91,6 +92,7 @@ export function useServiceTypes() {
                     service_type_id: typeData.id,
                     product_id: p.product_id,
                     default_quantity: p.default_quantity,
+                    use_unit_system: p.use_unit_system || false,
                 }))
 
                 const { error: productsError } = await supabase
@@ -138,6 +140,7 @@ export function useServiceTypes() {
                     service_type_id: id,
                     product_id: p.product_id,
                     default_quantity: p.default_quantity,
+                    use_unit_system: p.use_unit_system || false,
                 }))
 
                 const { error: productsError } = await supabase

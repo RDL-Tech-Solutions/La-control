@@ -177,17 +177,22 @@ export default function NewServiceModal({ isOpen, onClose, serviceTypes }) {
                                 </div>
                                 {stockStatus.products?.length > 0 && (
                                     <div className="space-y-1">
-                                        {stockStatus.products.map((sp, index) => (
-                                            <div key={index} className="flex items-center justify-between text-sm">
-                                                <span className="text-[var(--color-neutral-400)]">
-                                                    <Package className="w-3 h-3 inline mr-1" />
-                                                    {sp.product?.name}
-                                                </span>
-                                                <span className="text-[var(--color-neutral-500)]">
-                                                    -{sp.default_quantity} (restará {sp.product.current_quantity - sp.default_quantity})
-                                                </span>
-                                            </div>
-                                        ))}
+                                        {stockStatus.products.map((sp, index) => {
+                                            const unitName = sp.use_unit_system ? 'un' : (sp.product?.unit || 'qtd')
+                                            const deductionDisplay = `${sp.default_quantity} ${unitName}`
+
+                                            return (
+                                                <div key={index} className="flex items-center justify-between text-sm">
+                                                    <span className="text-[var(--color-neutral-400)]">
+                                                        <Package className="w-3 h-3 inline mr-1" />
+                                                        {sp.product?.code ? `[${sp.product.code}] ` : ''}{sp.product?.name}
+                                                    </span>
+                                                    <span className="text-[var(--color-neutral-500)]">
+                                                        -{deductionDisplay} (restará {sp.product.current_quantity - sp.deducedQuantity}{sp.product?.unit})
+                                                    </span>
+                                                </div>
+                                            )
+                                        })}
                                     </div>
                                 )}
                             </div>

@@ -10,17 +10,49 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session)
-            setUser(session?.user ?? null)
-            setLoading(false)
-        })
+        const initAuth = async () => {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession()
+
+                if (error) {
+                    if (error.message.includes('Refresh Token Not Found') ||
+                        error.message.includes('Invalid Refresh Token')) {
+                        console.warn('Auth: Invalid refresh token, signing out...')
+                        await supabase.auth.signOut()
+                        setSession(null)
+                        setUser(null)
+                    } else {
+                        console.error('Auth: Error getting session:', error.message)
+                    }
+                } else {
+                    setSession(session)
+                    setUser(session?.user ?? null)
+                }
+            } catch (err) {
+                console.error('Auth: Unexpected error in initAuth:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        initAuth()
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
-                setSession(session)
-                setUser(session?.user ?? null)
+            async (event, session) => {
+                console.log('Auth event:', event)
+
+                if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+                    setSession(null)
+                    setUser(null)
+                } else if (session) {
+                    setSession(session)
+                    setUser(session.user)
+                } else {
+                    setSession(null)
+                    setUser(null)
+                }
+
                 setLoading(false)
             }
         )

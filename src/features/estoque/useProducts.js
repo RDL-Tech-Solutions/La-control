@@ -34,7 +34,8 @@ export function useProducts() {
                 .from('products')
                 .select(`
                     *,
-                    brand:brands(id, name)
+                    brand:brands(id, name),
+                    categories(id, name, prefix)
                 `)
                 .order('name')
 
@@ -73,7 +74,8 @@ export function useProducts() {
                 .insert([product])
                 .select(`
                     *,
-                    brand:brands(id, name)
+                    brand:brands(id, name),
+                    categories(id, name, prefix)
                 `)
                 .single()
 
@@ -98,7 +100,8 @@ export function useProducts() {
                 .eq('id', id)
                 .select(`
                     *,
-                    brand:brands(id, name)
+                    brand:brands(id, name),
+                    categories(id, name, prefix)
                 `)
                 .single()
 
