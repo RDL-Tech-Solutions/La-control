@@ -12,6 +12,8 @@ import ServicosPage from './pages/ServicosPage'
 import FinanceiroPage from './pages/FinanceiroPage'
 import RelatoriosPage from './pages/RelatoriosPage'
 import CadastrosPage from './pages/CadastrosPage'
+import AuthCallbackPage from './pages/AuthCallbackPage'
+
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -56,7 +58,10 @@ function AppRoutes() {
         }
       />
 
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
       {/* Protected Routes */}
+
       <Route
         path="/"
         element={

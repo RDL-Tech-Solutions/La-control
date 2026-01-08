@@ -36,6 +36,7 @@ export function AuthProvider({ children }) {
                 data: {
                     name,
                 },
+                emailRedirectTo: `${window.location.origin}/auth/callback`,
             },
         })
 
